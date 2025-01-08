@@ -1,4 +1,3 @@
-/**
  * # Project Documentation
  *
  * This project leverages a Mask R-CNN model (with ResNet50-FPN backbones) for object detection
