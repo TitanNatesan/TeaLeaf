@@ -10,6 +10,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
+import base64
 
 # ==============================
 # 1. Configuration and Setup
@@ -294,7 +295,7 @@ def save_highest_confidence_segmentation(image, outputs):
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
-    """Endpoint to handle image upload and return prediction."""
+    """Endpoint to handle image upload and return prediction plus processed image."""
     try:
         image_data = await file.read()
         original_image, input_tensor = preprocess_image(image_data)
@@ -304,21 +305,22 @@ async def predict(file: UploadFile = File(...)):
         if output_buffer is None:
             return JSONResponse(content={"message": "No predictions above confidence threshold."}, status_code=204)
 
-        # Fetch recommendation for the detected pest
+        # Convert processed image to base64
+        processed_img_b64 = base64.b64encode(output_buffer.read()).decode("utf-8")
+
         recommendation = pest_recommendations.get(class_name, {
             "name": "Unknown Pest",
             "symptoms": ["No data available."],
             "control_methods": {"biological": [], "chemical": [], "mechanical": []}
         })
 
-        # Prepare JSON response
         response = {
             "prediction": class_name,
-            "remedy": remedies.get(class_name, "No remedy available for this pest."),
+            "remedy": remedies.get(class_name, "No remedy available."),
             "recommendation": recommendation,
+            "processed_image": processed_img_b64
         }
 
-        # Send response with image and metadata
         return JSONResponse(content=response, headers={"X-Prediction": class_name})
 
     except Exception as e:
