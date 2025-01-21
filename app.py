@@ -303,7 +303,7 @@ async def predict(file: UploadFile = File(...)):
         output_buffer, class_name = save_highest_confidence_segmentation(original_image.copy(), outputs)
 
         if output_buffer is None:
-            return JSONResponse(content={"message": "No predictions above confidence threshold."}, status_code=204)
+            return JSONResponse(content={"message": "No predictions above confidence threshold."}, status_code=206)
 
         # Convert processed image to base64
         processed_img_b64 = base64.b64encode(output_buffer.read()).decode("utf-8")
